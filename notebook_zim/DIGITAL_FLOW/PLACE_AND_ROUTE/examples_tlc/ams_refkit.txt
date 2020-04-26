@@ -1,0 +1,290 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-04-02T08:03:49+02:00
+
+====== ams refkit ======
+Created torsdag 02 april 2020
+
+# Custom variables
+###################
+
+set libName "XFAB_AMS_REF"
+set cellName "TM_select_3"
+set refLibs [list D_CELLS_HD D_CELLS_HDLL XFAB_AMS_REF]
+set verilogFile "input/${cellName}.v"		
+set ioFile "input/${cellName}.io"
+set mmmcFile "input/digital_onTop_MMMC.view"
+set powerNets [list vdd]
+set groundNets [list gnd] 
+
+
+# Definition of Innovus variables
+#################################
+
+setOaxMode -compressLevel 0
+setOaxMode -allowBitConnection true
+setOaxMode -allowTechUpdate false
+setOaxMode -updateMode true
+setDesignMode -process 180
+setViaGenMode -symmetrical_via_only true 
+
+
+# Globals
+##########
+
+set_table_style -no_frame_fix_width
+set_global timing_report_enable_auto_column_width true
+setMultiCpuUsage -localCpu 4 					
+
+
+# Import and initialization of design
+######################################
+
+set init_oa_design_lib 		$libName
+set init_top_cell		$cellName
+set init_oa_ref_lib		$refLibs
+set init_verilog 		$verilogFile		
+set init_io_file		$ioFile
+set init_mmmc_file		$mmmcFile
+set init_pwr_net		$powerNets
+set init_gnd_net		$groundNets
+set init_abstract_view		abstract
+set init_layout_view		layout
+
+init_design 
+
+
+# save initializations
+#######################
+
+#saveDesign -cellview [list $libName $cellName layout_00_init] 
+
+
+# Define floorplan
+###################
+
+save_global "output/TM_select_3.globals"
+getIoFlowFlag
+setIoFlowFlag 0
+floorPlan -site core_hdll -s 55 127 2.5 2.5 2.5 2.5
+uiSetTool select
+getIoFlowFlag
+
+fit
+
+#saveDesign -cellview [list $libName $cellName layout_01_fplan] 
+
+
+# Global P/G net connections
+#############################
+
+clearGlobalNets
+globalNetConnect gnd -type pgpin -pin gnd -instanceBasename * -hierarchicalInstance {}  
+globalNetConnect vdd -type pgpin -pin vdd -instanceBasename * -hierarchicalInstance {} 
+
+
+# Move Pins
+############
+
+selectPhyPin 0.0000 131.4350 0.7300 131.7150 3 {D_VREF[7]}
+editMove 0.0 -0.5
+deselectAll
+selectPhyPin -0.1400 130.8700 0.1400 131.6000 2 {D_VMG[0]}
+editMove 0.5 0.0
+deselectAll
+selectPhyPin 0.0000 -0.1400 0.7300 0.1400 3 TM_REFC_CUR
+editMove 0.0 0.5
+deselectAll
+selectPhyPin -0.1400 0.0000 0.1400 0.7300 2 {D_VREF[0]}
+editMove 0.5 0.0
+deselectAll
+selectPhyPin 59.2200 0.0000 59.5000 0.7300 2 TM_ERA_SVFY
+editMove -0.5 0.0
+deselectAll
+selectPhyPin 59.2150 130.8700 59.4950 131.6000 2 TM_RES26
+editMove -0.5 0.0
+deselectAll 
+
+selectPhyPin 23.6000 130.8700 23.8800 131.6000 2 {D_VREF[3]}
+editMove -0.5 0.0
+deselectAll 
+selectPhyPin 27.5600 130.8700 27.8400 131.6000 2 {D_VREF[4]}
+editMove -1 0.0
+deselectAll 
+selectPhyPin 31.5150 130.8700 31.7950 131.6000 2 {D_VREF[5]}
+editMove 2 0.0
+deselectAll 
+selectPhyPin 35.4750 130.8700 35.7550 131.6000 2 {D_VREF[6]}
+editMove 1 0.0
+deselectAll
+
+selectPhyPin 29.5400 0.0000 29.8200 0.7300 2 TM_ODD_WR
+editMove 1.5 0.0
+deselectAll
+selectPhyPin 33.7800 0.0000 34.0600 0.7300 2 TM_DIS_ALL
+editMove 0.5 0.0
+deselectAll
+
+
+# Sroute
+#########
+
+setSrouteMode -viaConnectToShape { noshape }
+sroute -connect { blockPin padPin padRing corePin floatingStripe } -layerChangeRange { MET1(1) MET3(3) } -blockPinTarget { nearestTarget } -padPinPortConnect { allPort oneGeom } -padPinTarget { nearestTarget } -corePinTarget { firstAfterRowEnd } -floatingStripeTarget { blockring padring ring stripe ringpin blockpin followpin } -allowJogging 1 -crossoverViaLayerRange { MET1(1) MET3(3) } -allowLayerChange 1 -blockPin useLef -targetViaLayerRange { MET1(1) MET3(3) }
+
+#saveDesign -cellview [list $libName $cellName layout_02_sroute] 
+
+
+# Power Planning (add Stripe)
+#############################
+
+setAddStripeMode -ignore_block_check false -break_at none -route_over_rows_only false -rows_without_stripes_only false -extend_to_closest_target none -stop_at_last_wire_for_area false -partial_set_thru_domain false -ignore_nondefault_domains false -trim_antenna_back_to_shape none -spacing_type edge_to_edge -spacing_from_block 0 -stripe_min_length stripe_width -stacked_via_top_layer METTP -stacked_via_bottom_layer MET1 -via_using_exact_crossover_size false -split_vias false -orthogonal_only true -allow_jog { padcore_ring  block_ring }
+addStripe -nets {vdd gnd} -layer MET2 -direction vertical -width 2 -spacing 0.46 -number_of_sets 1 -extend_to design_boundary -create_pins 1 -start_from left -start_offset 25.82 -switch_layer_over_obs false -max_same_layer_jog_length 2 -padcore_ring_top_layer_limit METTP -padcore_ring_bottom_layer_limit MET1 -block_ring_top_layer_limit METTP -block_ring_bottom_layer_limit MET1 -use_wire_group 0 -snap_wire_center_to_grid None -skip_via_on_pin {  standardcell } -skip_via_on_wire_shape {  noshape }  
+
+selectPhyPin 30.5200 0.0000 32.5200 2.0000 2 gnd
+editMove 0.0 129.6
+deselectAll
+selectPhyPin 28.0600 0.0000 30.0600 2.0000 2 vdd
+editMove 0.0 129.6
+deselectAll
+
+
+# place standard cell
+######################
+
+setRouteMode -earlyGlobalMaxRouteLayer 3
+placeDesign
+
+checkPlace "output/TM_select_3.checkPlace"
+setDrawView place
+
+#saveDesign -cellview [list $libName $cellName layout_03_place] 
+
+
+# Timing Report
+################
+
+redirect -quiet {set honorDomain [getAnalysisMode -honorClockDomains]} > /dev/null
+timeDesign -preCTS -pathReports -drvReports -slackReports -numPaths 50 -prefix TM_select_3_preCTS -outDir timingReports 
+
+
+# preCTS Optimization
+######################
+
+setEndCapMode -reset
+setEndCapMode -boundary_tap false
+setOptMode -fixCap true -fixTran true -fixFanoutLoad false
+setRouteMode -earlyGlobalMaxRouteLayer 3
+optDesign -preCTS
+
+#saveDesign -cellview [list $libName $cellName layout_04_preCTSopt] 
+
+
+# Clock tree synthesis and Optimisation
+########################################
+  
+create_route_type -name LeafUnshield -bottom_preferred_layer 2 -top_preferred_layer 3 
+set_ccopt_property -route_type LeafUnshield -net_type leaf 
+
+create_route_type -name TrunkUnshield -bottom_preferred_layer 2 -top_preferred_layer 3 
+set_ccopt_property -route_type TrunkUnshield -net_type trunk 
+
+timeDesign -preCTS 
+timeDesign -preCTS -hold 
+
+delete_ccopt_clock_tree_spec
+create_ccopt_clock_tree_spec -file "output/ccopt.spec"
+
+source "output/ccopt.spec" 
+
+set_ccopt_property allow_resize_of_dont_touch_cells false
+
+set_ccopt_mode -cts_inverter_cells {INHDX3 INHDX2 INHDX1} 
+set_ccopt_mode -cts_buffer_cells {BUHDX3 BUHDX1} 
+
+ccopt_design -cts  
+
+
+# postCTS Optimization
+######################
+
+setRouteMode -earlyGlobalMaxRouteLayer 3
+optDesign -postCTS
+
+#saveDesign -cellview [list $libName $cellName layout_05_cts] 
+
+
+# Nano Route
+#############
+
+setNanoRouteMode -quiet -timingEngine {}
+setNanoRouteMode -quiet -routeWithSiPostRouteFix 0
+setNanoRouteMode -quiet -drouteStartIteration default
+setNanoRouteMode -quiet -routeTopRoutingLayer 3
+setNanoRouteMode -quiet -routeBottomRoutingLayer 1
+setNanoRouteMode -quiet -drouteEndIteration default
+setNanoRouteMode -quiet -routeWithTimingDriven false
+setNanoRouteMode -quiet -routeWithSiDriven false
+routeDesign -globalDetail 
+
+
+# Timing Report
+################
+
+setAnalysisMode -analysisType onChipVariation
+setDelayCalMode -engine default -siAware true
+timeDesign -postRoute  
+
+
+# postRoute Optimization 
+#########################
+
+setOptMode -fixCap true -fixTran true -fixFanoutLoad false
+setDelayCalMode -engine default -siAware true
+setRouteMode -earlyGlobalMaxRouteLayer 3
+optDesign -postRout
+
+#saveDesign -cellview [list $libName $cellName layout_06_route] 
+
+
+#Filler Cells
+##############
+
+getFillerMode -quiet
+addFiller -cell FEED25HDLL FEED15HDLL FEED10HDLL FEED7HDLL FEED5HDLL FEED3HDLL FEED2HDLL FEED1HDLL -prefix FILLER
+
+
+#Double Cuts
+#############
+
+setNanoRouteMode -droutePostRouteSwapVia multiCut 
+routeDesign -viaOpt 
+
+
+# Writing out a Netlist
+########################
+
+saveNetlist "output/${cellName}_phys.v" 
+
+
+#RC_out
+########
+
+extractRC
+rcOut -spf "output/TOP_TM_select.spf" -rc_corner max_rc
+
+
+# Write sdf
+############
+
+all_hold_analysis_views 
+all_setup_analysis_views 
+write_sdf -view fast_functional_mode "output/TOP_TM_select_fast_1_98V_m40C.sdf" 
+write_sdf -view slow_functional_mode "output/TOP_TM_select_slow_1_62V_125C.sdf" 
+
+
+# Save Design
+##############
+
+saveDesign -cellview [list $libName $cellName layout] -rc 
+

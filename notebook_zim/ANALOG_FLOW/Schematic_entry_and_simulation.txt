@@ -1,0 +1,96 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-04-10T13:53:09+02:00
+
+====== Schematic entry and simulation ======
+Created fredag 10 april 2020
+
+
+====== Schematic entry ======
+
+In virtuoso create a library and attach it to the technology TECH_XH018. Then create a a schematic cell  and its test bench. Dont forget to go to Launch-> Schematic XL in order to use advanced options. Make sure you use ports for I/O and power/gnd/sub.  
+
+{{./pasted_image004.png}}
+
+
+Create a symbol: Create- >Cell View -> from Cell view
+
+{{./pasted_image005.png}}
+
+
+
+====== Schematic Simulation ======
+
+Create a test bench
+
+{{./pasted_image013.png}}
+
+Create a config view for the test bench. In teh library manager go to File-> New -> Cell View and select "config".
+
+{{./pasted_image007.png}}
+
+Then in the configuration form select "schematic" in the "View". Click on "Use Template"  and select "spectre".
+
+{{./pasted_image008.png}}
+
+When the hierarchy window appears, click on save and  then close it. 	
+
+Now open the config view for the test bench, and make sure that the schematic view is also checked to open:
+{{./pasted_image009.png}}
+
+
+Now both the schematic and hierarchy windows will open. Note that the default configuration is transistor level. Will will change the views to verilog-A (analog behavioral model) and analog_extracted (post-layout parasitic extraction) later.
+{{./pasted_image011.png}}
+
+
+ In the schematic go to Launch-> Schematic XL. Then fo to Launch-> ADE-GXL and click on "click to add a Test". The traditional ADE window will open. Set up a simulation (i.e. transient, and dc op). Go to Setup->High performance Simulation, and select APS. Check the option  "Use APS++". Close the window. The new simulation has just been created. Click on "Run" to test it. Plot the outputs.
+
+{{./pasted_image012.png}}
+
+The previous simulation used typical conditions. During schematic level, you will need to simulate corners and montecarlo.
+
+===== Corners Simulation =====
+
+In the ADE-GXL window click on "Click to add corner".  Then under "Model Files" click on "Click to add". In the new window click on Impor from Tests
+
+{{./pasted_image014.png}}
+
+
+{{./pasted_image015.png}}
+
+Now click on "Add new Corner" (The termometer icon) and configure the corners that you want to simulate based on the following guides:
+3s -> 3 sigma 
+tm -> typicall model 
+wp -> Worst Power (fast transistors, low resistors, low capacitors)
+ws -> Worst Speed (slow resistors, high resistors, high capacitors)
+
+Add also a design variable VD that controls the power supply and add ± 10% variations from the nominal value (1.8V in this case). Add temperature variations, and dont forget to uncheck the xh018.scs [mc_g] line.
+
+{{./pasted_image018.png}}
+
+
+Note that this simulation will create 64 corners. Before you set up a so agressive test, you may probably would want to first test your circuit with a group of  corners for worst power and worst speed without VD and temperature variations. If everything works fine, then you add another corner corner group that includes VD variations, and finally if everything went well, you add temperature corner. You may add as many corners as you want, but depending on the simulation that is required it will consume many resources.
+
+Go to Options->Job Setup and change the "MAx. Jobs" to a number < than the cores of the server (s2424 has 16 cores, 32 hyperthreaded). Be nice with the other users! Then run the simulation.
+Plot the results and check if some corners did not give the expected results.  You can get lots of help from back annotating the operating points for a particular corner by right-clicking in a result and selecting Annotate-> DC Node Voltages / DC operating points.
+
+===== Montecarlo Simulation =====
+
+Go to ADE-GXL and right click on the test you want to simulate and create a test copy of it. Deactivate the original test. Now right click on the new copy and select  "**Model Libraries...**"
+ Then make sure that only the following models are checked:
+config.scs (default)
+params.scs  (3s)
+xh018.scs (mc_g)    ->  MonteCarlo-Gaussian distribution
+
+In the ADL Windot at the top toolbar select "Monte Carlo Sampling" and click the simulation options (icon precisely at the right of Monte Carlo Samplig). Enter a reasonable high number for Number of Points (for pure analog building blocks ~200 - 300, smaller number for complex AMS). Select "Run Nominal simulation" and "Save Data to Allow Family Plots".
+
+{{./pasted_image019.png}}
+
+Run the simulation and plot the results. USe the calculator functions to pick up values at different points in curves. These values can be ploted as histograms.
+
+
+
+  
+
+
+

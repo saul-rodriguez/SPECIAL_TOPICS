@@ -1,0 +1,69 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-04-05T14:45:31+02:00
+
+====== VIRTUOSO ======
+Created söndag 05 april 2020
+
+====== 1) Schematic ======
+
+go to the CIW window and select File->Import Verilog
+Change the target library to the library where you have imported the P&R layout.
+Add the reference libraries used in your design separated by a space (in this case it was only D_CELLS_HD). 
+The "Verilog Files to import" field must point to the Verilog file created by innovus.
+
+{{./pasted_image003.png}}
+
+Inspect the schematic, it includes gates and decoupling capacitors:
+
+{{./pasted_image002.png}}
+
+
+
+====== 2) Layout ======
+
+Open the P&R layout in virtuoso and go to Tools -> Remaster Instances...
+
+{{./pasted_image.png}}
+
+{{./pasted_image001.png}}
+
+
+Now create lables for the pins. Go to Xkit Utils -> pin2label
+Check in the CIW that the labels were succesfuly created
+
+Run DRC with Assura. The design should not have errors as it was checked in innovus.
+
+Rund LVS with Assura. Everything should work with exception of power nets: innovus uses vdd and gnd nets whereas schematic uses vdd! and gnd!
+ This is Ok for now. When the design is embedded in another hierarchy, the global power nets need to be renamed using net
+
+==== APPENDIX 1 Use of Netset to override global power nets ====
+
+The power nets that need to be renamed during AMS design are:
+
+(standard HD and HDLL)
+power_vdd
+ground_gnd
+
+(junction-isolated JIHD)
+power_vddi
+ground_gndi
+
+Click on a digital instance block that was imported from innovus and edit its properties (click Q)
+ 
+{{./pasted_image006.png}}
+
+Then click Add. In name, write the power property name. In Type, select "netSet". In value, the new net name (coming from a pin for instance):
+{{./pasted_image004.png}}
+
+{{./pasted_image009.png}}
+
+Now in the layout place the new power pins over the vdd and gnd trunks and run a LVS:   
+
+{{./pasted_image011.png}}
+
+{{./pasted_image007.png}}
+
+
+
+ 

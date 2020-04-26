@@ -1,0 +1,85 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-03-26T19:37:43+01:00
+
+====== Modgen ======
+Created torsdag 26 mars 2020
+
+====== Differential Pair with modgens ======
+
+1) Make sure that TECH_XH018 is referenced by the working library, otherwise via definitions and other layout information will not be available
+
+2) Select the devices and modify the layout parameters"Gate Contacts on Top" to "Met1".  
+{{./pasted_image.png}}
+
+3) Make sure that there are meaninful names on the nets around the devices to layout. Select the devices and click on  the Module generator (Modgen) 
+{{./pasted_image015.png}}
+
+{{./pasted_image001.png}}
+
+This will bring the modget window. Press F to see the devices.
+
+{{./pasted_image002.png}}
+
+4) Click the "pattern" button on the menu and change the number of rows to 2, and manualy change the Base Pattern so that the fingers of transistors A and B are interdigitazed and quad-coupled. Then press Apply and OK. 
+
+{{./pasted_image003.png}}
+
+{{./pasted_image005.png}}
+
+5) Select all the devices and click "Member Alignment/Spacing". In the horizontal field, select Alignment: custom and the REference Layer "LVT". The spacing for **NMOS is -0.24** and for **PMOS is -0.58** (this will result in a **min. diff spacing of 0.28**) Press Apply and then OK. The spacing between the transistors now is reduced. Further reduction may be possible as long as DRC allow it.
+{{./pasted_image006.png}}
+
+{{./pasted_image007.png}}
+
+6) Select the top devices and click Flip Vertical
+
+{{./pasted_image008.png}}
+
+7) Click on "Create Single Trunk and Topologies" on the left toolbar. Select one of the input nets. Select M2 for the trunk. In Twig options select "Allow Multiple connections to a terminal", and select M1 for the Twig layer. Here you can select the number of minimum vias that you want to use. Since this connection is to a the gate, 1 or 2 vias per finger should be Ok. 
+
+{{./pasted_image009.png}}
+Without closing this form, now move the mouse somewhere in the middle of the two arrows and click once. Then move the mouse to the right or left and click it again (a line appears where the trunk will be created). Repeat the process for the other input of the differential pair.
+
+{{./pasted_image010.png}}
+
+8) The same procedure is done to create trunks for the drains and source terminals. Note that the width and number of contacts must be careful dimensioned for the required current densities. The modgen may have changed the name of the shared net A to A_xxxx. You may need to select all the devices and use the Property Editor to change the name of the shared net to "A".
+{{./pasted_image011.png}}
+{{./pasted_image012.png}}'
+
+Vertical trunks in M3 can also be created to connect drain and source horizontal trunks:
+{{./pasted_image013.png}}
+
+{{./pasted_image014.png}}
+
+9) Select "Guard Ring" and ckick on "Create MPP Guard Ring". Select gnd net and add some spacing for the ring. Then select the MPP to Use, in this case [[:PGuardRing]] (P+ contact ring to substreate). Then select all the layout and press Apply.
+ {{./pasted_image016.png}}
+
+{{./pasted_image018.png}}
+
+===== CURRENT MIRRORS AND OTHER MATCHED DEVICES =====
+
+Everything that applies for differential pairs also applies for current mirrors. There are however some differences when the number of devices to match is very large and 2 row structures are not applicable. In those cases, it is better to make a matrix with all the devices having the same orientation and use trunks to connect the nets. To keep symetry it is necessary to put __all the shared trunks__ at the same distances so that spacings between devices are constant. The "Create Trunks and Topologies" is very helpful for this since it allows to create groups of trunks at the same time. The recommendation is to add the trunks in order from the bottom to the top or from the top to the bottom.
+
+One important detail is that the trunks may connect to the devices in all possible directions which is often undesirable.  The best tip here is to keep all the metal to gate contacts at the bottom of the devices since the tools start connecting the trunks from the bottom of the devices. Note that the internal trucks can be dimensioned with smaller widths than the externals tracks.
+
+{{./pasted_image022.png}}
+
+{{./pasted_image023.png}}
+
+After vertical trunks and ring, the current mirror looks below. Note that the connections are done at all sides in order to reduce the resistance. 
+
+{{./pasted_image025.png}}
+
+
+
+Another alternative is to do manual fixing by removing tha twigs that are not desired, and/or using the "Add / Replace Twig topologies" . Select the instances or nets that need edition. Most probably all the devices will be required to follow the same routing rules. An easy way to select all the devices is to use the table view at the right side of the window, or press Ctrl+A.
+{{./pasted_image019.png}}
+
+Select the terminal that will be processed, then click on "Add/Replace Twin Topologies" , select the direction from the source trunk, and also "Replace Existing Twigs". Change the width type depending on the need and press Apply. 
+
+{{./pasted_image020.png}}
+
+{{./pasted_image021.png}}
+
+

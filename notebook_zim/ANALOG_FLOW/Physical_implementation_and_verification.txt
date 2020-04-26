@@ -1,0 +1,37 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-04-10T13:54:13+02:00
+
+====== Physical implementation and verification ======
+Created fredag 10 april 2020
+
+From the schematic view go to Launch-> Layout GXL. Then in the layout window go to Connectivity -> Generate from Source. 
+
+Go to the I/O tab and change the configuration to the desired Metal pin. Then check "Create Label As" under the Pin Label field and make sure that the configuration dialog looks like the following: 
+
+{{./pasted_image.png}}m
+
+Connect the layout using tracks in different metal layers. 
+
+Contacts:
+
+N+ diffusion contact: ND_C 
+P+ diffusom contact: PD_C
+
+Wells:
+
+N well: NWELL drawing
+
+{{./pasted_image004.png}}
+
+
+Run DRC check using Assura->Run DRC. The form's fields are already filled. There are a number of switches that can be selected.
+
+{{./pasted_image002.png}}
+
+Run LVS check using Assura -> Run LVS
+
+{{./pasted_image003.png}}
+
+Create an extracted view: Select Run Quantus. Then go to the Extraction tab and change the Ref Node to the VSS/GND node name in the analog cell.  
+{{./pasted_image005.png}}

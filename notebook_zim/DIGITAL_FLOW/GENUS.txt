@@ -1,0 +1,45 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-04-01T16:49:14+02:00
+
+====== GENUS ======
+Created onsdag 01 april 2020
+
+==== 1) Setup ====
+
+The tool works by running  a tcl script. There is a gui, but it only has limited functionality. An example of a comprehensive script that can be used as a starting point is available here: 
+  [[+sync tcl]]
+
+**Recommended reading.** A very detailed explanation of every step and command is available in:
+- **Comprehensive Digital IC Implementation and Sign-OFF (using Cadence tools), Lecture Notes Volume 1, in particular the SDC section**
+**- Comprehensive Digital IC Implementation and Sign-OFF (using Cadence tools), Workbook, lab 1.1 and lab 1.3**
+
+==== 2) Execution ====
+
+//cd genus//
+//genus -gui -files synt.tcl//
+
+The script will load the libraries, verilog files, and set constraints. Then it will proceed to synthetize the design ( elaborate, map and optimize). The results of the synthesis and different reports will be saved in the directory genus_output.
+
+[saul@s2424 genus_output]$ ls -la
+total 140
+drwxrwxr-x. 2 saul saul   167  1 apr 17.05 .
+drwxrwxr-x. 4 saul saul  4096  1 apr 17.12 ..
+-rw-rw-r--. 1 saul saul 66005  1 apr 17.05 design.genus_const.tcl
+-rw-rw-r--. 1 saul saul 22503  1 apr 17.05 design.sdc
+-rw-rw-r--. 1 saul saul   712  1 apr 17.05 synth_area.rpt
+-rw-rw-r--. 1 saul saul  3688  1 apr 17.05 synth_gates.rpt
+-rw-rw-r--. 1 saul saul   640  1 apr 17.05 synth_power.rpt
+-rw-rw-r--. 1 saul saul  4968  1 apr 17.05 synth_timing.rpt
+-rw-rw-r--. 1 saul saul 21101  1 apr 17.05 usart_synth.v
+
+The report files (*.rpt) are text files with information about area, type of gates, power, and timing. Probably the most important is to check that the "Slack" is positive so that there is no timing violations.
+
+The *.v file contains a verilog file with the mapped gates. This files is used by innovus during P&R.
+
+The *sdc file contains all the timing constraints. This file is used by innovus during P&R.
+
+The schematic can be seen by clicking the red + and adding a schematic view. Some reports can be generated as well as timing tools are available to explore the design.
+{{./pasted_image.png}}
+ 
+

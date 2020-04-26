@@ -1,0 +1,255 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-03-31T22:28:34+02:00
+
+====== PLACE AND ROUTE ======
+Created tisdag 31 mars 2020
+
+====== 1) Load the design ======
+
+cd innovus
+innovus
+
+Run the following initial configuration using the command line (script below):
+
+//setOaxMode -compressLevel 0//
+//setOaxMode -allowBitConnection true//
+//setOaxMode -allowTechUpdate false//
+//setOaxMode -updateMode true//
+//#setGenerateViaMode -auto true//
+//#setOaxMode -pinPurpose true//
+//setDesignMode -process 180//
+//setViaGenMode -symmetrical_via_only true//
+
+or use 
+
+//source XFAB_conf.tcl//
+
+Got to File->Design Import and fill the required fields. The reference libraries are directly taken from the virtuoso working directory that was create before. Make sure that you select all the libraries that are used including the output library.
+
+{{./pasted_image001.png}}
+
+You can use an existing MMMC file or create a new one. This guide explains how to create a new MMMC file: [[+MMMC]]
+
+Ckick on "Save..." so that the current configuration is saved in a file. Then click on "OK".
+
+==== 1.1) Check for errors. ====
+ If cells that are referenced in the constraint file design.sdc are missing, they may need to be commented/removed. First exit innovus, start it again, load the configuration file, and click OK.
+
+==== 1.2) Global Connects ====
+
+Execute the following command line instructions (script below):
+
+//clearGlobalNets//
+//globalNetConnect gnd -type pgpin -pin gnd -instanceBasename * -hierarchicalInstance {}  //
+//globalNetConnect vdd -type pgpin -pin vdd -instanceBasename * -hierarchicalInstance {}// 
+
+or use the tcl script:
+
+//source XFAB_global_connect_core.tcl//
+
+Save the design with the name [design_name]_loaded.
+
+====== 2) Floorplanning ======
+
+Recommended reading: Lab 2.2, Comprehensive Digital IC  Implementation and Sign-Off
+
+Go to [[FloorPlan-]]>Specify Floorplan
+
+Here there are several parameters that can be changed such as the aspect ration, core utilization, and margins. A good floorplan is extremelly important in order for the routing tools to do  a good job.
+Change the Core Utilization. Note that small designs have a rather poor core utilization of around 0,6 since stripes and routing will take considerable space. The core margins need to be defined. Here is is necessary to leave space for wide power and gnd rings. The margins depend on the width of these tracks which are defined by the maximum power consumption and metal current densities.
+
+{{./pasted_image002.png}}
+
+
+Save the design with the name loaded_floorplan
+
+====== 3) Power Rings and Stripes ======
+
+
+===== 3.1) Power Ring =====
+
+Go to Power->Power Planning->Add Ring
+
+Open the Net(s) folder and select the gnd and vdd nets. 
+Then change the ring configuration. By default, gnd and power nets will be routed in M1 and M2. This is Ok for small designs. Very large and complex designs that consume large amounts of current need to be supplied from higher layers. Change the widths of the metal tracks depending on the maximum current density that is expected in this design (the output power can be extracted from genus, check max current densities for this process in the PDK manual, and take a generous margins  in order to avoid electromigration problems).  Click on "Update" and spacings will be automatically calculated.
+
+{{./pasted_image003.png}}
+
+==== 3.2) Add Power Stripes ====
+
+Go to Power->Power Planning -> Add Stripe
+
+Open the folder and select the gnd and vdd nets. Then change Layer to M2 and the direction to Vertical. Change also the width.
+The "Set Pattern", "Stripe Boundary" and "First/Last Stripe" fields offer different alternatives to place the strips. For instance, use "Number of sets: 2". Then in "First/Last Stripe" select "Start from: left" and the Relative from core or selected area "Start: 20" and "Stop: 20".
+  {{./pasted_image004.png}}
+
+Click OK
+
+{{./pasted_image005.png}}
+
+==== 3.3) Route power and ground nets ====
+
+Go to Route-> Special Route and select the gnd and vdd nets. Then click on the  "Via Generation" tab and select "Stripe" in the "Make Via Connections To:" section.
+
+{{./pasted_image007.png}}
+
+{{./pasted_image006.png}}
+
+{{./pasted_image008.png}}
+
+Inspect that vias were correctly placed for the stripes. This is a good time to go to Verify->DRC and run a basic DRC check.
+
+Save the design as USART_RX_BAMSE_loaded_floorplan_power
+
+====== 4) Pin Placement ======
+
+Go to Edit->Pin Editor and select the pins or arrays individually or in groups (use Ctrl + left click). Then you can select any  suitable option in the Location group, for instance **Assign location** or **Spread**. This will enable the Side/Edge drop-down menu. Here you can select in which side of the block you want to put the pin or pins.  You can also select the metal layer (M3 or above should be fine for external block routing). Starting X/Y, spacing, and other parameters should be configured depending on the option that was chosen for Location. 
+
+Note: pin placement is part of the floor planning and therefire very important to obtain a good P&R result.  
+
+{{./pasted_image009.png}}
+
+{{./pasted_image010.png}}
+
+Run a DRC check and save the design as USART_RX_BAMSE_loaded_floorplan_power_pin
+
+====== 5) TIMING DRIVEN PLACEMENT ======
+
+==== 5.1) Place standard cells ====
+ 
+Before placement, it is good to run a timing check. Got to Timing->Report Timing, select "Pre-Place" and click OK. Check that there are no violating paths.
+
+Now go to Place->Place Standard Cell. Click on Mode and in the Placement form make sure that "Run Timing Driven Placement" and "Enable CLock Gating Awareness" are checked. Place IO Pins must be unchecked since the pins were already placed. Other options may depend on the design.
+
+{{./pasted_image014.png}}
+
+{{./pasted_image012.png}}
+
+Press OK to run the placement
+
+==== 5.2) Check design congestion ====
+
+Select Route-> Early Global Route and select the number of layers that will be used for routing (you can experiment), Press OK.
+
+Refresh the screen (Ctrl+R) or press the Redraw icon. Then expand the "Overlay" list at the right of the window and check "Congestion".  Uncheck instances and nets. Then you can see the congestion areas and the severity depending on the color code.
+{{./pasted_image015.png}}
+
+
+==== 5.3) Timing check before CTS ====
+
+Select Timing->Report Timing and check "Pre-CTS". Run the timing checks only for Setup
+
+If there are violations, then it is needed to run Timing Optimization: Eco->Optimize DEsign... (section 2.6, pp 6). Check timing again after optimization
+{{./pasted_image016.png}} 
+
+Save the design USART_RX_BAMSE_loaded_floorplan_power_pin_placed
+
+====== 6) CTS ======
+
+==== 6.1) Clock Tree creation ====
+
+At this point there is no GUI menus for CTS. The following commands create the clock tree:
+
+//create_ccopt_clock_tree_spec -file ccopt_native.spec// 
+
+//source ccopt_native.spec//
+
+//#set_ccopt_mode -cts_inverter_cells {INHDX3 INHDX2 INHDX1} //
+//#set_ccopt_mode -cts_buffer_cells {BUHDX3 BUHDX1} //
+
+//set_ccopt_mode -cts_inverter_cells {INHDX0 INHDX1 INHDX3 INHDX4 INHDX6 INHDX8 INHDX12} //
+//set_ccopt_mode -cts_buffer_cells {BUHDX0 BUHDX1 BUHDX3 BUHDX4 BUHDX6 BUHDX8 BUHDX12}//
+
+//ccopt_design -cts  //
+
+//optDesign -postCTS//
+//optDesign -postCTS -hold//
+
+Check the timings (Timing->Report Timing...) , for both setup and hold conditions. In case there are violations run the optimizer (Post-CTS) again.
+
+==== 6.2) Analysing the clock tree ====
+
+Select Clock-> CCopt Clock Debugger. Click Ok. In the new window click View-> Key Panel ( Lab 2.5 pp5)
+
+{{./pasted_image017.png}}
+
+Save the design USART_RX_BAMSE_loaded_floorplan_power_pin_placed_cts
+
+====== 7) Rout with Nanoroute ======
+
+Prepare the following settings for routing:
+
+//setAnalysisMode -analysisType onChipVariation -cppr both//
+//setOptMode -fixDRC true//  
+
+Go to Route-> [[NanoRoute]] -> Route 
+
+Make sure that Timing Driven is checked, also Fix Antenna, and insert diodes. The Diode cell name is ANTENNACELLNP2HD
+{{./pasted_image019.png}}
+
+Run a DRC check and timing check.
+
+If the router produces DRC errors, it is possible to give it hints by running Route-> Early Global Route, check the Routing layers M1 - M5/M6, OK. Then a new initial routing will be performed. After that, run nanoroute again. It may need a couple of iterations 
+
+Then run an optimization over the design:
+
+//optDesign -postRoute -setup -hold//
+
+Check that the timings are right:
+
+//timeDesign -postRoute//
+//timeDesign -postRoute -hold//
+
+Finally, add double vias whenever possible
+
+//setNanoRouteMode -droutePostRouteSwapVia multiCut //
+//routeDesign -viaOpt// 
+
+Check for DRC a last time and save the design as USART_RX_BAMSE_loaded_floorplan_power_pin_placed_cts_routed
+
+====== 8) Place Filler cells ======
+
+//setFillerMode -add_fillers_with_drc false//
+//addFiller -prefix FILLCAP -cell DECAP25HD DECAP15HD DECAP10HD DECAP7HD DECAP5HD DECAP3HD//
+//addFiller -prefix FILL -cell FEED25HD FEED15HD FEED10HD FEED7HD FEED5HD FEED3HD FEED2HD FEED1HD//
+
+Check the added cells:
+
+//pdi report_design//
+
+Save the design as USART_RX_BAMSE_loaded_floorplan_power_pin_placed_cts_routed_final
+
+====== 9) Export Design ======
+
+==== 9.1) Export Netlist ====
+
+#only logical letlist
+saveNetlist "output/USART_RX_BAMSE_pnr.v" 
+
+#physical instances including power and ground (for LVS in calibre)
+saveNetlist "output/USART_RX_BAMSE_pnr_lvs.v" -phys -excludeLeafCell
+
+#logical netlist + capacitors (for LVS in Cadence)
+saveNetlist "output/USART_RX_BAMSE_pnr_cap.v"  -includePhysicalCell { ANTENNACELLNP2HD DECAP25HD DECAP15HD DECAP10HD DECAP7HD DECAP5HD DECAP3HD }
+
+=== 9.2) Save layout ===
+
+Fo to File->Save Design and select OA. Then select the library created in Virtuoso.
+
+{{./pasted_image020.png}}
+
+=== 9.3) Export RC ===
+
+//extractRC//
+//rcOut -spf "output/TOP_TM_select.spf" -rc_corner max_rc//
+
+=== 9.4) Write SDF ===
+
+//all_hold_analysis_views //
+//all_setup_analysis_views //
+//write_sdf -view fast_functional_mode "output/TOP_TM_select_fast_1_98V_m40C.sdf" //
+//write_sdf -view slow_functional_mode "output/TOP_TM_select_slow_1_62V_125C.sdf"//
+
+
+

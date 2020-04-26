@@ -1,0 +1,84 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-04-01T16:48:45+02:00
+
+====== SETUP DIRECTORY ======
+Created onsdag 01 april 2020
+
+Note that some of the paths in this tutorial may point to older PDK files. Make sure you are using the very latest files!
+
+==== 1) Create a directory structure ====
+
+ Under the [design_name] directory, create the following directory structure.
+
+//[design_name]//
+	//init.sh (this is a script that sets environment variables for tools and licenses)//
+	//src     (In this directory, place the verilog source files that will be synthetized)//
+	//genus  (This is the run directory for synthesis)//
+	//virtuoso (This is a virtuoso working directory. A library that will hold the p&R design needs to be created and attached to a technology file (see below ))   //
+	//innovus (This is the run directory for P&R)//
+		//captables (This is a symbolic link to the directory containing the RC tables that are used for timing P&R)//
+	//liberty//
+		//This is a placeholder for the liberty timing files that will be used during the process//
+	//sim_rtl (pre-synthesis simulation of the rtl code)//
+	//sim_gate (post-synthesis simulation at gate level)//
+	//sim_postlay (post_layout simulation including layout delays)//
+
+
+==== 1.1) Setting up virtuoso directory ====
+
+//cd [design_name]//
+
+Load the design tools and license:
+
+//source init.sh//
+
+//cd virtuoso//
+
+//xkit -t xh018//
+
+Select 5 thin metal + 1 thick top metak. Virtuoso will open. Create a library for your design (i.e. USART) and attach it to the technology TECH_XH018_HD. 
+Close virtuoso and return to the design directory.
+
+//cd ..//
+
+//cd innovus//
+
+create a cds.lib file that points to the cds.lib file in the virtuoso directory:
+
+//nano cds.lib//
+
+copy the following line, save and exit (ctr+o, ctrl+x)
+
+//INCLUDE ../virtuoso/cds.lib//
+
+Finally, return to the design directory
+
+cd ..
+
+==== 1.2) Create symbolic links to liberty files ====
+Enter to the liberty directory and create symlinks to the liberty directories.
+
+cd liberty
+
+ln -s [[/pkg/xfab/XKIT/xh018/diglibs/IO_CELLS_C1V8/v1_1/liberty_LPMOS/v1_1_0/PVT_1_80V_1_80V_range/]] .
+ln -s  [[/pkg/xfab/XKIT/xh018/diglibs/D_CELLS_HD/v3_0/liberty_LPMOS/v3_0_1/PVT_1_80V_range/]] .
+
+cd ..
+
+==== 1.3) Create symbolic link to the captables ====
+
+cd innovus
+ln -s [[/pkg/xfab/XKIT/xh018/cadence/v8_0/capTbl/v8_0_1]] captables
+
+cd ..
+
+==== 1.4) Copy or create symbolic links to source verilog code ====
+
+cd src
+
+cp [[/path.../usart.v]] .
+
+
+END
+

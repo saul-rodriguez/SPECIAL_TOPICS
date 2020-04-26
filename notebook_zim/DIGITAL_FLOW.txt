@@ -1,0 +1,17 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-03-31T22:28:15+02:00
+
+====== DIGITAL FLOW ======
+Created tisdag 31 mars 2020
+
+FLOW ORDER:
+
+1) [[+SETUP DIRECTORY]]
+2) [[+RTL SIMULATION]]
+3) [[+GENUS]]
+4) [[+GATE SIMULATION]]
+5) [[+PLACE AND ROUTE]]
+6) [[+POST LAYOUT SIM]]
+7) [[+VIRTUOSO]]
+

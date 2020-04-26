@@ -1,0 +1,148 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-04-03T18:10:44+02:00
+
+====== example ams ======
+Created fredag 03 april 2020
+
+**SDC created by genus for an AMS design:**
+
+###################################################################
+
+# Created by write_sdc 
+
+###################################################################
+set sdc_version 1.8
+
+set_units -time ns -capacitance pF -current uA -voltage V -resistance kOhm
+###############################################################################
+#  
+# Units
+# capacitive_load_unit           : 1 pF
+# current_unit                   : 1e-06 A
+# resistance_unit                : 1 kOhm
+# time_unit                      : 1 ns
+# voltage_unit                   : 1 V
+###############################################################################
+
+set_max_fanout 4 [current_design]
+set_max_capacitance  0.2 [current_design]
+set_max_transition  3 [current_design]
+
+
+###############################################################################
+# Clock Related Information
+###############################################################################
+
+
+########### Clock input
+
+###### TM clock 
+##20MHz
+
+create_clock [get_ports TMCLK] -modes func -period 50  -waveform {0 25}
+set_clock_latency 1.8  [get_clocks TMCLK]
+set_clock_uncertainty -setup 2 [get_clocks TMCLK]
+set_clock_uncertainty -hold 0.2 [get_clocks TMCLK]
+
+############
+
+
+
+set_load -pin_load 0.15 [get_ports {TM_BIT_VFY}]
+set_load -pin_load 0.15 [get_ports {TM_CP}]
+set_load -pin_load 0.15 [get_ports {TM_DIS_ALL}]
+set_load -pin_load 0.15 [get_ports {TM_DMA_CB}]
+set_load -pin_load 0.15 [get_ports {TM_DMA_DATA}]
+set_load -pin_load 0.15 [get_ports {TM_TR}]
+set_load -pin_load 0.15 [get_ports {TM_ERA_SVFY}]
+set_load -pin_load 0.15 [get_ports {TM_FULL}]		
+set_load -pin_load 0.15 [get_ports {TM_SET_ALL}]		
+set_load -pin_load 0.15 [get_ports {TM_TEST}]		
+set_load -pin_load 0.15 [get_ports {TM_TRIM}]		
+set_load -pin_load 0.15 [get_ports {TM_WR_SVFY}]		
+set_load -pin_load 0.15 [get_ports {TM_SANEG}]		
+set_load -pin_load 0.15 [get_ports {TM_CP_LOAD}]
+set_load -pin_load 0.15 [get_ports {TM_CP_MEAS}]
+set_load -pin_load 0.15 [get_ports {TM_EVEN_WR}]		
+set_load -pin_load 0.15 [get_ports {TM_FAST_ERA}]		
+set_load -pin_load 0.15 [get_ports {TM_EXT_CLK_EN}]	
+set_load -pin_load 0.15 [get_ports {TM_ODD_WR}]		
+set_load -pin_load 0.15 [get_ports {TM_CEL_CUR}]		
+set_load -pin_load 0.15 [get_ports {TM_REFC_CUR}]
+set_load -pin_load 0.15 [get_ports {TM_RES22}]
+set_load -pin_load 0.15 [get_ports {TM_RES23}]		
+set_load -pin_load 0.15 [get_ports {TM_RES24}]		
+set_load -pin_load 0.15 [get_ports {TM_RES25}]		
+set_load -pin_load 0.15 [get_ports {TM_RES26}]		
+set_load -pin_load 0.15 [get_ports {D_VMG[7]}]		
+set_load -pin_load 0.15 [get_ports {D_VMG[6]}]
+set_load -pin_load 0.15 [get_ports {D_VMG[5]}]		
+set_load -pin_load 0.15 [get_ports {D_VMG[4]}]
+set_load -pin_load 0.15 [get_ports {D_VMG[3]}]		
+set_load -pin_load 0.15 [get_ports {D_VMG[2]}]
+set_load -pin_load 0.15 [get_ports {D_VMG[1]}]		
+set_load -pin_load 0.15 [get_ports {D_VMG[0]}]		
+set_load -pin_load 0.15 [get_ports {D_VREF[7]}]		
+set_load -pin_load 0.15 [get_ports {D_VREF[6]}]
+set_load -pin_load 0.15 [get_ports {D_VREF[5]}]		
+set_load -pin_load 0.15 [get_ports {D_VREF[4]}]
+set_load -pin_load 0.15 [get_ports {D_VREF[3]}]		
+set_load -pin_load 0.15 [get_ports {D_VREF[2]}]
+set_load -pin_load 0.15 [get_ports {D_VREF[1]}]		
+set_load -pin_load 0.15 [get_ports {D_VREF[0]}]		
+set_load -pin_load 0.15 [get_ports {TEST_VMG}]			
+set_load -pin_load 0.15 [get_ports {TEST_VREF}]	
+set_load -pin_load 0.15 [get_ports {TRIM_EN}]		
+
+set_output_delay -clock TMCLK  2  [get_ports {TM_BIT_VFY}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_CP}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_DIS_ALL}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_DMA_CB}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_DMA_DATA}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_TR}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_ERA_SVFY}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_FULL}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_SET_ALL}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_TEST}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_TRIM}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_WR_SVFY}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_SANEG}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_CP_LOAD}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_CP_MEAS}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_EVEN_WR}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_FAST_ERA}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_EXT_CLK_EN}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_ODD_WR}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_CEL_CUR}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_REFC_CUR}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_RES22}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_RES23}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_RES24}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_RES25}]
+set_output_delay -clock TMCLK  2  [get_ports {TM_RES26}]
+set_output_delay -clock TMCLK  2  [get_ports {D_VMG[7]}]
+set_output_delay -clock TMCLK  2  [get_ports {D_VMG[6]}]
+set_output_delay -clock TMCLK  2  [get_ports {D_VMG[5]}]
+set_output_delay -clock TMCLK  2  [get_ports {D_VMG[4]}]
+set_output_delay -clock TMCLK  2  [get_ports {D_VMG[3]}]
+set_output_delay -clock TMCLK  2  [get_ports {D_VMG[2]}]
+set_output_delay -clock TMCLK  2  [get_ports {D_VMG[1]}]
+set_output_delay -clock TMCLK  2  [get_ports {D_VMG[0]}]
+set_output_delay -clock TMCLK  2  [get_ports {D_VREF[7]}]
+set_output_delay -clock TMCLK  2  [get_ports {D_VREF[6]}]
+set_output_delay -clock TMCLK  2  [get_ports {D_VREF[5]}]
+set_output_delay -clock TMCLK  2  [get_ports {D_VREF[4]}]
+set_output_delay -clock TMCLK  2  [get_ports {D_VREF[3]}]
+set_output_delay -clock TMCLK  2  [get_ports {D_VREF[2]}]
+set_output_delay -clock TMCLK  2  [get_ports {D_VREF[1]}]
+set_output_delay -clock TMCLK  2  [get_ports {D_VREF[0]}]
+set_output_delay -clock TMCLK  2  [get_ports {TEST_VMG}]
+set_output_delay -clock TMCLK  2  [get_ports {TEST_VREF}]
+set_output_delay -clock TMCLK  2  [get_ports {TRIM_EN}]
+
+set_driving_cell -lib_cell INHDLLX1 [all_inputs]
+
+
+
+

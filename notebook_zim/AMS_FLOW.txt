@@ -1,0 +1,135 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-04-10T13:27:40+02:00
+
+====== AMS FLOW ======
+Created fredag 10 april 2020
+
+===== 1) Schematic =====
+
+Analog and digital blocks have normally different power and ground connections. Two details are importat at schematic entry level: 
+
+1) [[NetSets]] are needed in digital cells to override global power and ground nets.  More information on the use of [[NetSets]] is available in [[DIGITAL FLOW:VIRTUOSO]]
+
+2) When standard logic and the analog circuits share the same subtrate, DRC and LVS will throw errors since there will be 2 different nets connecting to the substrate. For this reason it is needed to place a use **SUBCUT (VER)** layer around a subtrate area that needs to be separated from the main substrate. Note that this separation is only for LVS purposes. In reality there is no electric isolation between the main subtrate and this cut area! In the schematic it is needed to add the device "s_res" from the PRIMLIB and connect it to the 2 ground connections. The device s_res is a 5 Ohm resistor.
+
+The following is an example of an AMS design that has a digital circuit I0 (a 3-bit counter) and an analog circuit I1 (a hand-made inverter).  The digital circuit has 3 simulation views: functional, schematic (P&R gate level + filler caps), schematic_gate (synthetized). The analog circuit has 3 simulation views: Verilog-A, schematic, and analog_extracted (parastic extraction). 
+
+
+{{./pasted_image003.png}}
+
+{{./pasted_image004.png}}
+
+
+===== 2)  Test bench preparation =====
+
+One of the advantages of running an AMS simulation is that very advanced tests can be applied to the designs since the stimulus signals can be written in Verilog/Verilog-AMS using functions and tasks. The test bench for the previous example is presented below. Note that capacitors C1-C3 have been added between the stimulus and the inputs that go to the digital block. Sometimes AMS simulation become confused and crash if they dont see at least 1 analog device in the path.  
+
+{{./pasted_image005.png}}
+
+Block I5 consists of a Verilog-AMS module that reuses the verilog code used in the test bench.  Note that this module could have also been implemented with exactly the same code in verilog and imported in Cadence to a cell as a functional view. 
+
+//Verilog-AMS HDL for "DIGITAL_TEST", "counter_stimulus" "verilogams"
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+`timescale 1ns / 1ps
+
+module counter_stimulus ( clk, enable, reset );
+
+  output enable;
+  output reset;
+  output clk;
+
+  reg clk, reset, enable;
+
+  initial begin
+	//$dumpfile("dump.vcd");
+	//$dumpvars(0,counter1);
+	clk = 0;
+	reset = 0;
+	enable = 0;
+	#16 reset = 1;
+	#18 reset = 0;
+	#10 enable = 1;	
+	#100 $finish;
+end
+    
+  always begin
+	#5 clk = ~clk;
+  end
+
+endmodule
+
+===== 3) Simulation setup =====
+
+Create a config view from the testbench schematic. Use the AMS template. The config view will be used to select which blocks' views will be netlisted and simulated.
+
+Launch the ADE-XL, and create a new test. Select Setup->Simulator and select ams.
+
+{{./pasted_image006.png}}
+
+Select Setup->High Performance/Parasitic reduction and select APS. In APS Options check the option "Use ++aps".
+
+Select Setup->Connect Rules/IE Setup...
+ You can use either the IE-card Vased Setup(OSS/UNL) or the Connect Rule/Conect Module Based Setup. Note that XFAB has a rule set for simualtion of variable power supplies.
+
+{{./pasted_image.png}}
+
+Go to Simulation->Options->AMS simulator... Then click in Include Option Settings and add the verilog digital libraries that are used in the design. 
+
+{{./pasted_image002.png}}
+
+Note that it is also possible to have done the previous step by using "Include Options" and passing a .inc file to "Option files (-f)". That file would look like this:
+
+//-v /pkg/xfab/XKIT/xh018/diglibs/D_CELLS_HD/v3_0/verilog/v3_0_0/VLG_PRIMITIVES.v//
+//-v /pkg/xfab/XKIT/xh018/diglibs/D_CELLS_HD/v3_0/verilog/v3_0_0/D_CELLS_HD.v//
+//+sdf_verbose//
+
+Finally add the simulation type and select the nets to be saved/plotted.
+
+===== 4) AMS Simulation =====
+
+===== 4.1) VerilogA analog + Functional digital simulation =====
+
+Change the view list in the config view and also select individualy the views for the blocks.
+
+{{./pasted_image007.png}}
+
+
+
+===== 4.2) Schematic (transistor level) Analog + Gate level digital =====
+
+
+{{./pasted_image008.png}}
+
+**Important NOTE:** If some of the views are not found (red color), it is because the library list is incomplete. Just a add the required libraries and recompile the hierarchy. 
+{{./pasted_image011.png}}
+
+
+===== 4.3) Post-Layout (Parasitic extracted Analog) + Post-Layout Digital (Gate level + SDF delays) =====
+
+This simulation requires to back-annotate the delays due to the P&R in innovus. These delays were saved in a sdf file and are annotated to the instantiated module by adding the following line to the Verilog-AMS stimulus:
+
+  initial begin
+	$sdf_annotate("/home/saul/projects/SPECIAL_TOPICS/counter/innovus/output/TOP_TM_select_slow_1_62V_125C.sdf",I0.I0,,"sdf.log","MAXIMUM");
+  end
+
+The full path to the file needs to be provided. Also the name of the instance/module to be annotated with all the hierarchy path needs to be provided   (in this case it is I0.I0).
+ 
+A new view called verilogams_sdf which includes this modification was created. After compilation, the hierarchy view looks like this:
+
+{{./pasted_image009.png}}
+
+After running the simulation, open the xrun.log file and make sure that the SDF file was read correctly. If the SDF annotation fails, the simulation will still be executed and only a warning will be applied!
+
+{{./pasted_image010.png}}
+
+====== 5) AMS TOP Simulation ======
+
+Everything is exactly the same as in the previous sections. The only addition is that the IO pads have verilogams models  that need to be included in the simulation. In the "**Library List**" field of the hierarchy editor add "VLG PRIMITIVES" and "IO_CELLS_3V". Also, add "verilogams" at the beginning of the "**View List**" and recompile the hierarchy. 
+
+
+
+

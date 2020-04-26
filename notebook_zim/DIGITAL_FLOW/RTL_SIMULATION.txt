@@ -1,0 +1,104 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-04-08T17:13:56+02:00
+
+====== RTL SIMULATION ======
+Created onsdag 08 april 2020
+
+====== 1) Setup working directory ======
+
+Create a directory for the RTL simulation:
+
+//mkdir sim_rtl//
+//cd sim_rtl//
+
+Create a file hdl.varthe points to xcelium definitions
+
+//nano hdl.var//
+
+Copy the following lines, save and exit (ctrl+o, ctrl+x)
+
+//define WORK work//
+//###include $CDSHOME/tools/inca/files/hdl.var//
+
+Create the following directories:
+
+//mkdir work//
+//mkdir work_lib//
+//mkdir work_sub//
+
+Finally create a cds.lib 
+
+//nano cds.lib//
+
+ add the following content and svae/exit (ctrl+o, ctrl+x):
+
+//include $CDSHOME/tools/inca/files/cds.lib//
+//define work_lib ./work_lib//
+//define work_sub ./work_sub//
+//define work ./work//
+
+create a file presyn.tcl  and copy the following lines (read the notes below first!): 
+
+//database -open -vcd wave_usart_rx_bamse_tb -into //
+
+//run//
+//probe -create -database wave_usart_rx_bamse_tb -all -depth to_cell rx_mod//
+//run//
+//exit//
+
+**Note1:** This file will be passed as argument to xsim. The first line tells the tool to create a vcd file to store simulation data. The second line starts the simulation (run). __In the test bench, there must be a line called "$stop" that is executed before $finish__. This is necessary because only after stop, the third line will be executed. This line creates a probe for the signal to be stored in the vcd file. The fourth line continue the execution until $finish is found.
+
+**Note2:** The previous file is not needed if the VCD file is created internally in the test bench. Then the only thing that is required is to trigger the simulation with xmsim as it is explain in note3 below.
+ 
+
+====== 2) Script to load libaries/verilog code, elaborate, and simulate: ======
+
+Create a make.sh script:
+
+//nano make.sh//
+
+and copy the following conten (replace usart.v and usart_rx_bamse_tb with your verilog source and test bench), save and exit (ctrl+o, ctrl+x):
+
+//rm -rf work*/* work*/.* *.log .simvision *.dsn *.trn *.vcd wave* *.X//
+
+//xmvlog -work work_lib -cdslib ./cds.lib -logfile xmvlog_presyn.log \//
+//	-errormax 15 -update -linedebug -status -define DISPLAY_PD_PU_EN \//
+//	/pkg/xfab/XKIT/xh018/diglibs/D_CELLS_HD/v3_0/verilog/v3_0_0/D_CELLS_HD.v \//
+//	/pkg/xfab/XKIT/xh018/diglibs/D_CELLS_HD/v3_0/verilog/v3_0_0/VLG_PRIMITIVES.v//
+
+//xmvlog -work work_sub -cdslib ./cds.lib -append_log \//
+//	-logfile xmvlog_presyn.log -errormax 15 -update -linedebug \//
+//	-status ../src/usart.v //
+
+//xmvlog -work work -cdslib ./cds.lib -append_log \//
+//    -logfile xmvlog_presyn.log -errormax 15 -update -linedebug \//
+//    -define presyn -status ../src/usart_rx_bamse_tb.v//
+
+//xmelab -work work -cdslib ./cds.lib -timescale '1ns/1ps' \//
+//    -logfile xmelab_presyn.log -errormax 30 -access +wc \//
+//    -nowarn CUVWSP -nowarn SDFNCAP -status work.usart_rx_bamse_tb//
+
+//xmsim -cdslib ./cds.lib \//
+//    -logfile xmsim_presyn.log -errormax 15 -status work.usart_rx_bamse_tb:module \//
+//    -input ./presyn.tcl//
+
+**Note3:** If the test bench writes its own vcd file, then the last command can be changed to:
+
+//xmsim -cdslib ./cds.lib   -logfile xmsim_presyn.log -errormax 15 -status work.usart_rx_bamse_tb:module//
+
+**Note4:** there is a -define presyn passed to xmvlog when loading the test bench. This is the same as writing  //`define presyn//  in the code and can be used to activate or deactivate sections of the code for this particular simulation .
+
+====== 3) View the results in simvision ======
+
+load the vcd file in simvision:
+
+//simvision wave_usart_rx_bamse_presyn.vcd//
+
+Select the module and wires to displau, and click on the "=" button at the right side of the window:
+
+{{./pasted_image.png}}
+
+
+
+ 
